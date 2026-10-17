@@ -6,6 +6,7 @@
 - Changed append mode (`a`, `ab`, `a+`, and `ab+`) to create missing cloud files, matching Python file behavior. Appending to existing files still preserves their content. (Issue [#585](https://github.com/drivendataorg/cloudpathlib/issues/585))
 
 - Fixed mypy missing-import errors for `CloudPath` and `AnyPath` when the optional Pydantic integration is not installed. (Issue [#385](https://github.com/drivendataorg/cloudpathlib/issues/385), PR [#603](https://github.com/drivendataorg/cloudpathlib/pull/603))
+- Fixed pickling a cloud path losing an explicitly configured persistent `local_cache_dir`. A path whose client was created with a `local_cache_dir` previously fell back to a fresh temporary cache directory when unpickled, so already-cached files were re-downloaded (most visibly under multiprocessing, where paths are pickled to reach workers). The explicit cache directory is now preserved across a pickle round-trip; paths that use the default/temporary cache still fall back to the default client unchanged. (Issue [#504](https://github.com/drivendataorg/cloudpathlib/issues/504))
 
 ## v0.26.0 (2026-10-01)
 

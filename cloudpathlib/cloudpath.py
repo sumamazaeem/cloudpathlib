@@ -339,9 +339,23 @@ class CloudPath(metaclass=CloudPathMeta):
     def __getstate__(self) -> Dict[str, Any]:
         state = self.__dict__.copy()
 
-        # don't pickle client
+        # The client holds an un-pickleable cloud SDK session, so it is not
+        # pickled; the unpickled path lazily falls back to the default client.
+        # However, if the client was given an explicit, persistent
+        # `local_cache_dir`, that is deliberate configuration the user chose
+        # (not a throwaway temp dir), so preserve just that path and reattach a
+        # client bound to it on unpickling -- otherwise a round-trip silently
+        # changes the cache dir and re-downloads cached files (see issue #504).
+        client = state.get("_client", None)
         if "_client" in state:
             del state["_client"]
+            persistent_cache_dir = getattr(client, "_local_cache_dir", None)
+            if (
+                getattr(client, "file_cache_mode", None) == FileCacheMode.persistent
+                and getattr(client, "_cache_tmp_dir", None) is None
+                and persistent_cache_dir is not None
+            ):
+                state["_pickle_local_cache_dir"] = str(persistent_cache_dir)
 
         # urllib.parse.ParseResult can be rebuilt from the cloud path string.
         state.pop("_url", None)
@@ -349,8 +363,20 @@ class CloudPath(metaclass=CloudPathMeta):
         return state
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
+        # A preserved explicit persistent cache dir (see __getstate__) is used to
+        # rebuild a client bound to the same directory, so the restored path
+        # reuses the original cache instead of a fresh temp dir. Best-effort: if
+        # the client cannot be reconstructed, fall back to the default-client
+        # behavior rather than failing to unpickle.
+        cache_dir = state.pop("_pickle_local_cache_dir", None)
         self.__dict__.update(state)
         self._url = urlparse(self._str)
+
+        if cache_dir is not None:
+            try:
+                self._client = self._cloud_meta.client_class(local_cache_dir=cache_dir)
+            except Exception:
+                self._client = None
 
     @property
     def _no_prefix(self) -> str:
