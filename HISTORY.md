@@ -55,4 +55,26 @@
   - Added `CloudPathInfo` and `CloudPath.info` to get information about a file or directory.
   - Added additional no-op kwargs to `mkdir`, `touch`, `glob`, `rglob`, `stat` to match pathlib.
 
-For the complete historical changelog, see the project repository.
+## v0.22.0 (2025-08-29)
+
+- Fixed issue with GS credentials, using default auth enables a wider set of authentication methods in GS (Issue [#390](https://github.com/drivendataorg/cloudpathlib/issues/390), PR [#514](https://github.com/drivendataorg/cloudpathlib/pull/514), thanks @ljyanesm) 
+- Added support for http(s) urls with `HttpClient`, `HttpPath`, `HttpsClient`, and `HttpsPath`. (Issue [#455](https://github.com/drivendataorg/cloudpathlib/issues/455), PR [#468](https://github.com/drivendataorg/cloudpathlib/pull/468))
+- Added experimental support for patching the builtins `open`, `os`, `os.path`, and `glob` to work with `CloudPath` objects. It is off by default; see the new "Compatibility" section in the docs for more information. (Issue [#128](https://github.com/drivendataorg/cloudpathlib/issues/128), PR [#322](https://github.com/drivendataorg/cloudpathlib/pull/322))
+- Added support for `CloudPath(*parts)` to create a `CloudPath` object from a list of parts (to match `pathlib.Path`). **This is a potentially breaking change for users that relied on the second arg being the `client` instead of making it an explicit kwarg.** (PR [#322](https://github.com/drivendataorg/cloudpathlib/pull/322))
+
+## v0.21.1 (2025-05-14)
+
+- Fixed `rmtree` fail on Azure with no `hns` and more than 256 blobs to drop (Issue [#509](https://github.com/drivendataorg/cloudpathlib/issues/509), PR [#508](https://github.com/drivendataorg/cloudpathlib/pull/508), thanks @alikefia)
+
+## v0.21.0 (2025-03-03)
+
+- Removed support for deprecated env var that had a typo (`CLOUPATHLIB_FILE_CACHE_MODE`; you should use `CLOUDPATHLIB_FILE_CACHE_MODE`).
+- Added support for `timeout` and `retry` kwargs for `GSClient`. (Issue [#484](https://github.com/drivendataorg/cloudpathlib/issues/484), PR [#485](https://github.com/drivendataorg/cloudpathlib/pull/485), thanks @Mchristos)
+- Fixed `CloudPath(...) / other` to correctly attempt to fall back on `other`'s `__rtruediv__` implementation, in order to support classes that explicitly support the `/` with a `CloudPath` instance. Previously, this would always raise a `TypeError` if `other` were not a `str` or `PurePosixPath`. (PR [#479](https://github.com/drivendataorg/cloudpathlib/pull/479))
+- Added `md5` property to `GSPath`, updated LocalGSPath to include `md5` property, updated mock_gs.MockBlob to include `md5_hash` property. (Issue [#482](https://github.com/drivendataorg/cloudpathlib/issues/482), PR [#483](https://github.com/drivendataorg/cloudpathlib/pull/453))
+- Fixed an uncaught exception on Azure Gen2 storage accounts with HNS enabled when used with `DefaultAzureCredential`. (Issue [#486](https://github.com/drivendataorg/cloudpathlib/issues/486), PR [#487](https://github.com/drivendataorg/cloudpathlib/pull/487))
+- Removed support for Python 3.8, which was EOL in October 2024. (PR [#502](https://github.com/drivendataorg/cloudpathlib/pull/502))
+
+## Earlier versions
+
+See the full changelog in the repository history (versions v0.20.0 and earlier) at https://github.com/drivendataorg/cloudpathlib/blob/master/HISTORY.md
